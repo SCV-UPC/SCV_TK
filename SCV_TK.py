@@ -1,0 +1,415 @@
+#coding: utf-8
+
+from Tkinter import *
+import Tkinter
+import tkMessageBox
+import time
+import signal
+import Pyro4
+import os
+from PIL import ImageTk,Image
+import controlGlobal
+
+
+final_buffer=True
+final_connecta=True
+final_motor=True
+
+IP_MASTER='192.168.1.37'
+anterior='&'
+idx=0
+idx2=0
+comandesGlobals=''
+cercaRaspberrys=''
+IPs=[]
+motors=['Google','ATT','Witai']
+motor=0
+
+
+
+root = Tkinter.Tk()
+
+root.title('SISTEMA DE CONTROL PER VEU')
+
+image2 =Image.open('Etseib.jpg')
+image1 = ImageTk.PhotoImage(image2)
+label = Label(root,image=image1, height=220,width=1200)
+label.pack(side=TOP)
+
+def signal_handler(signum, frame):
+
+    raise Exception("Timed out!")
+
+
+def Configuracio():
+
+	stop()
+	clear()
+
+	path='/home/pi/SCV/CONFIGURATION/config.txt'
+
+	E1.delete(0, END)
+	E1.insert(0,path)
+
+	fitxer=Pyro4.Proxy("PYRO:jasper.fitxer@%s:5187"%(Lb1.get(ACTIVE)))
+	a=fitxer.veure_fitxer(path)
+	escrit.delete(1.0, END)
+	escrit.insert(INSERT,a)
+
+
+def llistaIPs():
+
+	Lb1.delete(0, END)
+	cercaRaspberrys=Pyro4.Proxy("PYRO:jasper.cercaRaspberrys@%s:5168"%(IP_MASTER))
+	try:
+		IPs=cercaRaspberrys.direccions()
+
+		for idx,el in enumerate(IPs):
+
+			config=Pyro4.Proxy("PYRO:jasper.Config@%s:5111"%(el))
+			nom=config.valor_actual()[0]
+			Lb1.insert(idx+1, IPs[idx]+'-'+nom)	
+		Lb1.pack(side=RIGHT)
+
+	except:
+
+		tkMessageBox.showinfo( "Error", "No s'ha pogut connectar amb la màquina MASTER")
+
+def edita():
+		
+	stop()
+	clear()
+
+	escrit.delete(1.0, END)
+	escrit.insert(END,comandesGlobals.valor_actual())
+
+	guardar.config(state=NORMAL)
+
+def presentacio():
+
+	stop()
+	clear()
+
+	escrit.delete(1.0, END)
+	escrit.insert(INSERT, "\n\n\n                ADAPTACIÓ D'UN HABITATGE A PERSONES AMB PROBLEMES DE MOBILITAT MITJANÇANT CONTROL PER VEU \n                                              Autor: Eduard Godori Nogareda\n                                                  Tutor: Manel Velasco") 
+  
+	
+def connecta():
+
+	global IP_MASTER
+	global idx
+	global idx2
+	global comandesGlobals
+	global cercaRaspberrys
+	global final_connecta
+	global IPs
+
+
+		
+	if not final_connecta:
+
+		if idx==255:
+
+			final_connecta=True
+			idx=0
+			idx2=0
+			tkMessageBox.showinfo( "Direccions correctes", "S'han trobat les següents direccions: "+str(IPs))
+			IPs=[]
+	
+		direccio='192.168.1.'+str(idx)
+
+		comprovaConnexio=Pyro4.Proxy("PYRO:jasper.comprovaConnexio@192.168.1.%s:5166"%(str(idx)))
+		signal.signal(signal.SIGALRM, signal_handler)
+		signal.setitimer(signal.ITIMER_REAL,0.1) 
+
+		try:
+			
+			index=comprovaConnexio.comprova()
+			IPs.append(direccio)
+			escrit.insert(END,direccio)
+			escrit.insert(END,": Màquina connectada a la xarxa de control per veu.\n")
+			master=comprovaConnexio.valor_actual()
+			if master !="":
+				
+				IP_MASTER=master
+				comandesGlobals=Pyro4.Proxy("PYRO:jasper.comandesGlobals@%s:5164"%(IP_MASTER))
+				cercaRaspberrys=Pyro4.Proxy("PYRO:jasper.cercaRaspberrys@%s:5168"%(IP_MASTER))
+				Lb1.insert(idx2,direccio)
+				idx2=idx2+1
+					
+		except Exception, msg:
+			escrit.insert(END,direccio)
+			escrit.insert(END,": No s'ha pogut connectar amb aquesta màquina.\n")
+		escrit.pack()
+		signal.setitimer(signal.ITIMER_REAL,0)
+		idx=idx+1
+	root.after(10, connecta)
+
+		
+
+def connectaIP():
+
+	stop()
+	clear()
+
+	global final_connecta
+	global idx
+
+	if final_connecta:
+		idx=0
+		final_connecta=False
+		clear()
+		Lb1.delete(0, END)
+	else:
+			
+		tkMessageBox.showinfo( "Error", "Encara s'està executant una cerca de IPs.")
+
+def fitxer():
+
+	stop()
+
+	fitxer=Pyro4.Proxy("PYRO:jasper.fitxer@%s:5187"%(Lb1.get(ACTIVE)))
+	a=fitxer.veure_fitxer(E1.get())
+	escrit.delete(1.0, END)
+	escrit.insert(INSERT,a)
+
+def guardar():
+
+	stop()
+
+	fitxer=Pyro4.Proxy("PYRO:jasper.fitxer@%s:5187"%(Lb1.get(ACTIVE)))
+	result= tkMessageBox.askquestion("Atenció!", "Segur que voleu guardar el text de la pantalla a " + E1.get(),icon='warning')
+	if result=='yes':
+		fitxer.escriure_fitxer(E1.get(),escrit.get("1.0",END))
+
+	else:
+		pass
+
+def clear():
+
+	escrit.delete(1.0, END)
+	E1.delete(0, END)
+
+def Buffer():
+
+	global comandesGlobals
+	global cercaRaspberrys
+
+	stop()
+	
+	global final_buffer
+	final_buffer=False
+	clear()
+
+	try:
+
+		comandes=comandesGlobals.valor_axctual()
+		Raspberrys=cercaRaspberrys.direccions()
+		escrit.insert(END,"Comandes globals:")
+		escrit.insert(END,'\n')
+		escrit.insert(END,comandes)
+		escrit.insert(END,'\n')
+		escrit.insert(END,"Màquines connectades al SCV:")
+		escrit.insert(END,'\n')
+		escrit.insert(END,Raspberrys)
+		escrit.insert(END,'\n')
+		escrit.insert(END,"Traduccions que s'estan fent a la màquina:")
+		escrit.insert(END,'\n')
+	except:
+
+		pass
+
+def scanning():
+
+	global final_buffer	
+	global anterior
+
+	if final_buffer==False:
+
+		try:
+			buff=Pyro4.Proxy("PYRO:jasper.Buffer@%s:5181"%(Lb1.get(ACTIVE)))
+			nou=buff.valor_actual()
+
+			if  anterior!=nou and nou!=None:#si entra un None peta.IMPRESCINDIBLE
+	
+				escrit.insert(END,nou)
+				escrit.insert(END,'\n')
+				anterior=nou
+		except:
+			escrit.insert(END,"Error al connectar amb la màquina.\n")
+	root.after(1000, scanning)
+
+def stop():
+
+	global final_buffer
+	global final_connecta
+	global final_motor
+	final_buffer=True
+	final_connecta=True
+	final_motor=True
+
+def testSTT():
+
+	stop()
+	clear()
+	global motor
+	global final_motor
+	clear()
+	motor=0
+	final_motor=False
+
+
+def testSTT_slave():
+	global motor
+	global final_motor
+
+	if not final_motor:
+		if motor==0:
+			escrit.insert(END,'Inciant test dels motors STT..\n\n')
+			
+		if motor==3:
+			motor=0
+			final_motor=True
+			tkMessageBox.showinfo("Informació","S'ha acabat amb el test dels motors STT. A pantalla es poden veure els resultats de traducció i els temps de resposta.")
+
+		else:
+			
+			escrit.insert(END,controlGlobal.temps(motors[motor]))
+			escrit.pack()
+			motor=motor+1
+
+	root.after(1000, testSTT_slave)
+
+def simulador():
+
+	os.system("python simulador/simulador.py '%s' &"%(IP_MASTER))
+
+def Radio():
+
+	import actualitzar
+
+def actualitza():
+
+	idx=v.get()
+	IP=Lb1.get(ACTIVE)
+
+	if idx==1:#actualitzar llista IPS al SCV_TK
+		llistaIPs()
+	elif idx==2:#nova cerca de IPs
+		executa=Pyro4.Proxy("PYRO:jasper.executaComanda@%s:5163"%(IP_MASTER))
+		executa.executa("python /home/pi/SCV/MASTER/actualitzaCercaRaspberrys.py")
+
+	elif idx==3:#configuracio
+		executa=Pyro4.Proxy("PYRO:jasper.executaComanda@%s:5163"%(IP))
+		executa.executa("python /home/pi/SCV/CONFIGURATION/actualitzaConfig.py")
+
+	elif idx==4:#comandes locals
+		executa=Pyro4.Proxy("PYRO:jasper.executaComanda@%s:5163"%(IP))
+		executa.executa("python /home/pi/SCV/REMOTEOBJECTS/actualitzaComandesLocals.py")
+	
+	elif idx==5:#comandes globals
+		executa=Pyro4.Proxy("PYRO:jasper.executaComanda@%s:5163"%(IP_MASTER))
+		executa.executa("python /home/pi/SCV/MASTER/actualitzaComandesGlobals.py")
+	
+	elif idx==6:#pagina web
+		executa=Pyro4.Proxy("PYRO:jasper.executaComanda@%s:5163"%(IP_MASTER))
+		executa.executa("python /home/pi/SCV/WEBPAGE/editorPHP.py")		
+
+	
+
+	
+
+
+frameLlista=Frame(root)
+frameLlista.pack(side=LEFT)
+
+frameLlista2=Frame(frameLlista)
+frameLlista2.pack(side=BOTTOM)
+
+frame = Frame(root)	
+frame.pack(side=LEFT)
+
+frameText=Frame(root)
+frameText.pack(side=TOP)
+
+frameButton=Frame(root)
+frameButton.pack(side=BOTTOM)
+
+Lb1 = Listbox(frameLlista,height=9,width=20)
+Lb1.pack()
+
+#botons
+button0 = Button(frame, text="Presentació",height=4,width=20, command=presentacio)
+button0.pack( side = TOP)
+
+button1 = Button(frame, text="Configuració",height=4,width=20, command=Configuracio)
+button1.pack( side = TOP)
+
+button2 = Button(frame, text="Veure Estat Actual",height=4,width=20,command=Buffer)
+button2.pack( side = TOP)
+
+button3 = Button(frame, text="Edita Comandes", height=4,width=20,command=edita)
+button3.pack( side = TOP )
+
+button4 = Button(frame, text="Test de Traducció",height=4,width=20,command=testSTT)
+button4.pack( side = TOP)
+
+button5 = Button(frame, text="Simulació",height=4,width=20,command=simulador)
+button5.pack( side = TOP)
+
+#llista
+button2 = Button(frameLlista2, text="Connecta",height=4,width=18, command=connectaIP)
+button2.pack()
+v = IntVar()
+v.set(1)  # initializing the choice, i.e. Python
+
+llista = [
+    ("Cerca IPs al SCV_TK",1),
+    ("Cerca IPs al SCV",2),
+    ("Configuració",3),
+    ("Comandes locals",4),
+    ("Comandes globals",5),
+    ("Pàgina web",6)
+]
+
+
+Label(frameLlista2, 
+      text="""Escull què actualitzar:""",
+      justify = LEFT,
+      padx = 20).pack()
+
+for txt, val in llista:
+    Radiobutton(frameLlista2, 
+                text=txt,
+                padx = 20, 
+                variable=v, 
+                value=val).pack(anchor=W)
+
+button1 = Button(frameLlista2, text="Actualitza",height=4,width=18, command=actualitza)
+button1.pack( side = BOTTOM)
+
+
+#text
+def onclick():
+   pass
+
+escrit= Text(frameText, height=28,width=116)
+escrit.insert(INSERT, "\n\n\n                ADAPTACIÓ D'UN HABITATGE A PERSONES AMB PROBLEMES DE MOBILITAT MITJANÇANT CONTROL PER VEU \n                                              Autor: Eduard Godori Nogareda\n                                                  Tutor: Manel Velasco") 
+  
+escrit.pack(side=BOTTOM)
+
+#path
+L1 = Label(frameText, text="PATH")
+L1.pack( side = LEFT)
+E1 = Entry(frameText, bd =1,width=70)
+E1.pack(side = LEFT)
+button2 = Button(frameText, text="Obre",height=1,width=10, command=fitxer)
+button2.pack(side=LEFT)
+button3 = Button(frameText, text="Guarda",height=1,width=10, command=guardar)
+button3.pack(side=LEFT)
+
+
+root.after(1000, testSTT_slave)
+root.after(10, connecta)
+root.after(1000, scanning)#baixar aquest temps dona errors. Possible saturació del servidor
+root.mainloop()
