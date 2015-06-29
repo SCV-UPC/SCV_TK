@@ -3,34 +3,34 @@ import time
 import sys
 import Pyro4
 
-#IP_MASTER=sys.argv[1]
-IP_MASTER='192.168.1.40'
-simulador=Pyro4.Proxy("PYRO:jasper.Simulador@%s:5123"%(IP_MASTER))
+IP_MASTER=sys.argv[1]
 
-fons=pygame.image.load('simulador/simulador.png')
-persiana1=pygame.image.load('simulador/persiana1.png')
-persiana2=pygame.image.load('simulador/persiana2.png')
-persiana3=pygame.image.load('simulador/persiana3.png')
-persiana4=pygame.image.load('simulador/persiana4.png')
-persiana5=pygame.image.load('simulador/persiana5.png')
-persiana6=pygame.image.load('simulador/persiana6.png')
-persiana7=pygame.image.load('simulador/persiana7.png')
-porta1=pygame.image.load('simulador/porta1.png')
-porta2=pygame.image.load('simulador/porta2.png')
-porta3=pygame.image.load('simulador/porta3.png')
-porta4=pygame.image.load('simulador/porta4.png')
-porta5=pygame.image.load('simulador/porta5.png')
-porta6=pygame.image.load('simulador/porta6.png')
-porta7=pygame.image.load('simulador/porta7.png')
-porta8=pygame.image.load('simulador/porta8.png')
-porta9=pygame.image.load('simulador/porta9.png')
-porta10=pygame.image.load('simulador/porta10.png')
-llum=pygame.image.load('simulador/bombeta.png')
-llum2=pygame.image.load('simulador/bombeta2.png')
-musica=pygame.image.load('simulador/nota.png')
-gota=pygame.image.load('simulador/gota.png')
-ventilador=pygame.image.load('simulador/ventilador.png')
-televisor=pygame.image.load('simulador/televisor.png')
+simulador=Pyro4.Proxy("PYRO:jasper.Simulador@%s:5123"%(IP_MASTER))
+path='/home/eduard/Desktop/SCV_TK/'
+fons=pygame.image.load(path+'simulador/simulador.png')
+persiana1=pygame.image.load(path+'simulador/persiana1.png')
+persiana2=pygame.image.load(path+'simulador/persiana2.png')
+persiana3=pygame.image.load(path+'simulador/persiana3.png')
+persiana4=pygame.image.load(path+'simulador/persiana4.png')
+persiana5=pygame.image.load(path+'simulador/persiana5.png')
+persiana6=pygame.image.load(path+'simulador/persiana6.png')
+persiana7=pygame.image.load(path+'simulador/persiana7.png')
+porta1=pygame.image.load(path+'simulador/porta1.png')
+porta2=pygame.image.load(path+'simulador/porta2.png')
+porta3=pygame.image.load(path+'simulador/porta3.png')
+porta4=pygame.image.load(path+'simulador/porta4.png')
+porta5=pygame.image.load(path+'simulador/porta5.png')
+porta6=pygame.image.load(path+'simulador/porta6.png')
+porta7=pygame.image.load(path+'simulador/porta7.png')
+porta8=pygame.image.load(path+'simulador/porta8.png')
+porta9=pygame.image.load(path+'simulador/porta9.png')
+porta10=pygame.image.load(path+'simulador/porta10.png')
+llum=pygame.image.load(path+'simulador/bombeta.png')
+llum2=pygame.image.load(path+'simulador/bombeta2.png')
+musica=pygame.image.load(path+'simulador/nota.png')
+gota=pygame.image.load(path+'simulador/gota.png')
+ventilador=pygame.image.load(path+'simulador/ventilador.png')
+televisor=pygame.image.load(path+'simulador/televisor.png')
 
 fotos=[fons,persiana1,persiana2,persiana3,persiana4,persiana5,persiana6,persiana7,porta1,porta2,porta3,porta4,porta5,porta6,porta7,porta8,porta9,porta10,llum,llum,llum,llum,llum,llum,llum2,llum2,
 llum2,llum2, gota,televisor,ventilador,musica,musica,musica,musica]

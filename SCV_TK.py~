@@ -235,7 +235,7 @@ def scanning():
 			buff=Pyro4.Proxy("PYRO:jasper.Buffer@%s:5181"%(Lb1.get(ACTIVE)))
 			nou=buff.valor_actual()
 
-			if  anterior!=nou and nou!=None:
+			if  anterior!=nou and nou!=None:#si entra un None peta.IMPRESCINDIBLE
 	
 				escrit.insert(END,nou)
 				escrit.insert(END,'\n')
@@ -298,25 +298,25 @@ def actualitza():
 	idx=v.get()
 	IP=Lb1.get(ACTIVE)
 
-	if idx==1:
+	if idx==1:#actualitzar llista IPS al SCV_TK
 		llistaIPs()
-	elif idx==2:
+	elif idx==2:#nova cerca de IPs
 		executa=Pyro4.Proxy("PYRO:jasper.executaComanda@%s:5163"%(IP_MASTER))
 		executa.executa("python /home/pi/SCV/MASTER/actualitzaCercaRaspberrys.py &")
 
-	elif idx==3:
+	elif idx==3:#configuracio
 		executa=Pyro4.Proxy("PYRO:jasper.executaComanda@%s:5163"%(IP))
 		executa.executa("python /home/pi/SCV/CONFIGURATION/actualitzaConfig.py &")
 
-	elif idx==4:
+	elif idx==4:#comandes locals
 		executa=Pyro4.Proxy("PYRO:jasper.executaComanda@%s:5163"%(IP))
 		executa.executa("python /home/pi/SCV/REMOTEOBJECTS/actualitzaComandesLocals.py &")
 	
-	elif idx==5:
+	elif idx==5:#comandes globals
 		executa=Pyro4.Proxy("PYRO:jasper.executaComanda@%s:5163"%(IP_MASTER))
 		executa.executa("python /home/pi/SCV/MASTER/actualitzaComandesGlobals.py &")
 	
-	elif idx==6:
+	elif idx==6:#pagina web
 		executa=Pyro4.Proxy("PYRO:jasper.executaComanda@%s:5163"%(IP_MASTER))
 		executa.executa("python /home/pi/SCV/WEBPAGE/editorPHP.py &")		
 
@@ -343,6 +343,7 @@ frameButton.pack(side=BOTTOM)
 Lb1 = Listbox(frameLlista,height=9,width=20)
 Lb1.pack()
 
+#botons
 button0 = Button(frame, text="Presentació",height=4,width=20, command=presentacio)
 button0.pack( side = TOP)
 
@@ -361,10 +362,11 @@ button4.pack( side = TOP)
 button5 = Button(frame, text="Simulació",height=4,width=20,command=simulador)
 button5.pack( side = TOP)
 
+#llista
 button2 = Button(frameLlista2, text="Connecta",height=4,width=18, command=connectaIP)
 button2.pack()
 v = IntVar()
-v.set(1) 
+v.set(1)  # initializing the choice, i.e. Python
 
 llista = [
     ("Cerca IPs al SCV_TK",1),
@@ -391,6 +393,8 @@ for txt, val in llista:
 button1 = Button(frameLlista2, text="Actualitza",height=4,width=18, command=actualitza)
 button1.pack( side = BOTTOM)
 
+
+#text
 def onclick():
    pass
 
@@ -399,6 +403,7 @@ escrit.insert(INSERT, "\n\n\n                ADAPTACIÓ D'UN HABITATGE A PERSONE
   
 escrit.pack(side=BOTTOM)
 
+#path
 L1 = Label(frameText, text="PATH")
 L1.pack( side = LEFT)
 E1 = Entry(frameText, bd =1,width=70)
@@ -411,5 +416,5 @@ button3.pack(side=LEFT)
 
 root.after(1000, testSTT_slave)
 root.after(10, connecta)
-root.after(1000, scanning)
+root.after(1000, scanning)#baixar aquest temps dona errors. Possible saturació del servidor
 root.mainloop()
